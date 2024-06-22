@@ -3,6 +3,11 @@
 #include <iostream>
 #include <unordered_map>
 
+int lineNum = 0;                // 行号
+std::string fileLocation = "";  // 文件位置
+bool startOfLine = false;       // 是否为一行的第一个非 whitespace token
+bool leadingSpace = false;      // token 前是否有 whitespqce
+
 // 映射定义，将ANTLR的tokenTypeName映射到clang的格式
 std::unordered_map<std::string, std::string> tokenTypeMapping = {
   { "Int", "int" },
@@ -19,7 +24,30 @@ std::unordered_map<std::string, std::string> tokenTypeMapping = {
   { "EOF", "eof" },
   { "Equal", "equal" },
   { "Plus", "plus" },
+  { "Star", "star" },
+  { "Slash", "slash" },
+  { "Minus", "minus" },
+  { "Percent", "percent" },
   { "Comma", "comma" },
+  { "If", "if" },
+  { "Else", "else" },
+  { "While", "while" },
+  { "Const", "const" },
+  { "Void", "void" },
+  { "Break", "break" },
+  { "Continue", "continue" }, 
+  { "Greater", "greater" },
+  { "Less", "less" },
+  { "Lessequal", "lessequal" },
+  { "Greaterequal", "greaterequal" },
+  { "Equalequal", "equalequal" },
+  { "Exclaimequal", "exclaimequal" },
+  { "Pipepipe", "pipepipe" },
+  { "Ampamp", "ampamp" },
+  { "Exclaim", "exclaim" },
+  { "LineAfterPreprocessing", "LineAfterPreprocessing" },
+  { "Whitespace", "Whitespace" },
+  { "Newline", "Newline" },
 
   // 在这里继续添加其他映射
 };
@@ -41,21 +69,55 @@ print_token(const antlr4::Token* token,
   if (tokenTypeMapping.find(tokenTypeName) != tokenTypeMapping.end()) {
     tokenTypeName = tokenTypeMapping[tokenTypeName];
   }
-  std::string locInfo = " Loc=<0:0>";
 
-  bool startOfLine = false;
-  bool leadingSpace = false;
+  if (tokenTypeName == "LineAfterPreprocessing") {
+    std::string s = token->getText();
+    fileLocation = s.substr(s.find('"')+1, s.rfind('"')-s.find('"')-1 );
+    lineNum = 0;
+    for (int i=2;s[i]!=' ';i++)   // 计算文件的起始行号
+    {
+      lineNum = lineNum*10 + s[i] - 48;
+    }
+
+    lineNum--;  // Newline会++
+  }
+
+  if (tokenTypeName == "Newline") {   // 更新信息
+    startOfLine = true;
+    leadingSpace = false;
+    lineNum++;
+  } else if (tokenTypeName == "Whitespace") {
+    leadingSpace = true;
+  }
+
+  if (tokenTypeName == "LineAfterPreprocessing" || tokenTypeName == "Whitespace" || tokenTypeName == "Newline") {
+    return;
+  }
+
+  int col = token->getCharPositionInLine() + 1;   // 从1开始
+  
+  std::string locInfo = "Loc=<" + fileLocation + ":" + std::to_string(lineNum) +  ":" + std::to_string(col) + ">";
+
 
   if (token->getText() != "<EOF>")
     outFile << tokenTypeName << " '" << token->getText() << "'";
   else
     outFile << tokenTypeName << " '"
             << "'";
-  if (startOfLine)
+  
+  if (startOfLine && leadingSpace) {
+    outFile << "\t [StartOfLine] [LeadingSpace]";
+  }else if (startOfLine)
     outFile << "\t [StartOfLine]";
-  if (leadingSpace)
-    outFile << " [LeadingSpace]";
-  outFile << locInfo << std::endl;
+   else if (leadingSpace)
+    outFile << "\t [LeadingSpace]";
+   else
+    outFile << "\t";
+
+  outFile << "\t" << locInfo << std::endl;
+
+  startOfLine = false;
+  leadingSpace = false;
 }
 
 int

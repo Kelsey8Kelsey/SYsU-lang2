@@ -7,9 +7,14 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include "ConstantFolding.hpp"
+#include "ConstantPropagation.hpp"
 #include "Mem2Reg.hpp"
 #include "StaticCallCounter.hpp"
 #include "StaticCallCounterPrinter.hpp"
+#include "StrengthReduction.hpp"
+#include "CSE.hpp"
+#include "DCE.hpp"
+#include "Combine.hpp"
 
 void
 opt(llvm::Module& mod)
@@ -21,7 +26,9 @@ opt(llvm::Module& mod)
   FunctionAnalysisManager fam;
   CGSCCAnalysisManager cgam;
   ModuleAnalysisManager mam;
+
   ModulePassManager mpm;
+  // FunctionPassManager fpm;
 
   // 注册分析pass的管理器
   PassBuilder pb;
@@ -35,9 +42,17 @@ opt(llvm::Module& mod)
   mam.registerPass([]() { return StaticCallCounter(); });
 
   // 添加优化pass到管理器中
-  mpm.addPass(StaticCallCounterPrinter(llvm::errs()));
   mpm.addPass(Mem2Reg());
+  // mpm.addPass(llvm::createModuleToFunctionPassAdaptor(std::move(fpm)));
+  mpm.addPass(StaticCallCounterPrinter(llvm::errs()));
+  mpm.addPass(ConstantPropagation(llvm::errs()));
   mpm.addPass(ConstantFolding(llvm::errs()));
+  // mpm.addPass(CSE(llvm::errs()));            // BUG exists, needs to be fixed.
+  // mpm.addPass(DCE(llvm::errs()));
+  mpm.addPass(Combine(llvm::errs()));
+  mpm.addPass(StrengthReduction(llvm::errs()));
+  
+  
   // 运行优化pass
   mpm.run(mod, mam);
 }

@@ -33,6 +33,7 @@ public:
   std::pair<TypeExpr*, std::string> operator()(
     ast::DirectDeclaratorContext* ctx,
     TypeExpr* sub);
+  
 
   //============================================================================
   // 表达式
@@ -42,7 +43,19 @@ public:
 
   Expr* operator()(ast::AssignmentExpressionContext* ctx);
 
+  Expr* operator()(ast::ConditionalExpressionContext* ctx);
+
+  Expr* operator()(ast::LogicOrExpressionContext* ctx);
+
+  Expr* operator()(ast::LogicAndExpressionContext* ctx);
+
+  Expr* operator()(ast::EqualityExpressionContext* ctx);
+
+  Expr* operator()(ast::RelationalExpressionContext* ctx);
+
   Expr* operator()(ast::AdditiveExpressionContext* ctx);
+
+  Expr* operator()(ast::MultiplicativeExpressionContext* ctx);
 
   Expr* operator()(ast::UnaryExpressionContext* ctx);
 
@@ -64,6 +77,10 @@ public:
 
   Stmt* operator()(ast::JumpStatementContext* ctx);
 
+  Stmt* operator()(ast::IfStatementContext* ctx);
+
+  Stmt* operator()(ast::WhileStatementContext* ctx);
+
   //============================================================================
   // 声明
   //============================================================================
@@ -73,6 +90,8 @@ public:
   FunctionDecl* operator()(ast::FunctionDefinitionContext* ctx);
 
   Decl* operator()(ast::InitDeclaratorContext* ctx, SpecQual sq);
+
+  Decl* operator()(ast::ParameterDeclarationContext* ctx);
 
 private:
   struct Symtbl;

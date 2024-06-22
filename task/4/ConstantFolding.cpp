@@ -64,6 +64,19 @@ ConstantFolding::run(Module& mod, ModuleAnalysisManager& mam)
               }
               break;
             }
+            case Instruction::URem:
+            case Instruction::SRem: {
+              if (constLhs && constRhs) {
+                binOp->replaceAllUsesWith(ConstantInt::getSigned(
+                  binOp->getType(),
+                  constLhs->getSExtValue() % constRhs->getSExtValue()));
+                instToErase.push_back(binOp);
+                ++constFoldTimes;
+              }
+              break;
+            }
+            // TODO: MORE
+
             default:
               break;
           }

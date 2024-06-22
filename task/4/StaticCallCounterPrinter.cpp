@@ -23,4 +23,5 @@ StaticCallCounterPrinter::run(Module& mod, ModuleAnalysisManager& mam)
 
   mOut << "-------------------------------------------------\n\n";
   return PreservedAnalyses::all();
+  // PreservedAnalyses::all() 用于告诉 LLVM 框架，执行某个变换后，所有之前的分析结果都依然有效，不需要重新计算。
 }

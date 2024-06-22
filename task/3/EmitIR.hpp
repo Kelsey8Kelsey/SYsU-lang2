@@ -21,6 +21,14 @@ private:
 
   llvm::Function* mCurFunc;
   std::unique_ptr<llvm::IRBuilder<>> mCurIrb;
+  void* mRet;
+  struct whileBlock
+  {
+    void* whileEndBlock;
+    void* whileCondBlock;
+
+    whileBlock(void* a, void* b) : whileEndBlock(a), whileCondBlock(b) {}
+  };
 
   //============================================================================
   // 类型
@@ -37,6 +45,17 @@ private:
   llvm::Constant* operator()(asg::IntegerLiteral* obj);
 
   // TODO: 添加表达式处理相关声明
+  llvm::Value* operator()(asg::BinaryExpr* obj);
+  
+  llvm::Value* operator()(asg::ImplicitCastExpr* obj);
+
+  llvm::Value* operator()(asg::DeclRefExpr* obj);
+
+  llvm::Value* operator()(asg::UnaryExpr* obj);
+
+  llvm::Value* operator()(asg::ParenExpr* obj);
+
+  llvm::Value* operator()(asg::CallExpr* obj);
 
   //============================================================================
   // 语句
@@ -48,6 +67,18 @@ private:
 
   void operator()(asg::ReturnStmt* obj);
 
+  void operator()(asg::DeclStmt* obj);
+
+  void operator()(asg::ExprStmt* obj);
+
+  void operator()(asg::IfStmt* obj);
+
+  void operator()(asg::WhileStmt* obj);
+
+  void operator()(asg::BreakStmt* obj);
+
+  void operator()(asg::ContinueStmt* obj);
+
   // TODO: 添加语句处理相关声明
 
   //============================================================================
@@ -57,6 +88,12 @@ private:
   void operator()(asg::Decl* obj);
 
   void operator()(asg::FunctionDecl* obj);
+
+  void trans_init(llvm::Value* val, asg::Expr* obj);
+
+  void operator()(asg::VarDecl* obj);
+
+  
 
   // TODO: 添加声明处理相关声明
 };
